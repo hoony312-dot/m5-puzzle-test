@@ -91,10 +91,11 @@ ul { margin: 0; padding-left: 1.2em; display: grid; gap: 6px; line-height: 1.55;
     status.hidden = true; bar.hidden = true;
     start.hidden = false;
     if (!canFull) { start.textContent = "시작"; document.getElementById("ios").hidden = false; }
-    start.addEventListener("click", async () => {
-      try { if (canFull) await document.documentElement.requestFullscreen({ navigationUI: "hide" }); } catch (e) {}
-      try { await screen.orientation.lock("landscape"); } catch (e) {}
-      document.getElementById("note").hidden = true;
+    start.addEventListener("click", () => {
+      document.getElementById("note").hidden = true;   // 전체 화면이 거절돼도 게임은 바로 보이게
+      if (canFull) document.documentElement.requestFullscreen({ navigationUI: "hide" })
+        .then(() => screen.orientation && screen.orientation.lock && screen.orientation.lock("landscape"))
+        .catch(() => {});
     });
   }).catch((e) => {
     status.textContent = "불러오지 못했어요. 새로고침해 주세요. (" + e + ")";
