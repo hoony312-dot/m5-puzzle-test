@@ -1,5 +1,12 @@
+<!doctype html>
+<html lang="ko">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<link rel="manifest" href="manifest.webmanifest">
 <title>거인의 숨결 퍼즐 시험판</title>
-<meta name="claude:viewport-fit-sides" content="cover">
 <style>
 /* hallmark v2.0.0 · fast mode · genre: playful (kids) · theme: custom, the game's own stone-and-gold palette · signature: the puzzle itself, full screen */
 /* critique: a loader in front of a full-screen game; the only words are the tester's four instructions, then the game takes the whole screen */
@@ -15,7 +22,7 @@
 }
 html, body { height: 100%; overflow-x: clip; }
 body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 16px; }
-#stage { position: fixed; inset: 0; }
+#stage { position: fixed; inset: 0; height: 100dvh; }
 #unity-canvas { width: 100%; height: 100%; display: block; background: var(--bg); touch-action: none; }
 #note {
   position: fixed; inset: 0; display: grid; place-items: center;
@@ -31,6 +38,10 @@ ul { margin: 0; padding-left: 1.2em; display: grid; gap: 6px; line-height: 1.55;
 .bar { height: 8px; border-radius: 4px; background: var(--track); overflow: hidden; }
 .fill { height: 100%; width: 100%; background: var(--gold); transform-origin: left; transform: scaleX(0); }
 #status { margin: 0; color: var(--muted); font-size: 0.875rem; }
+#start { font: inherit; font-size: 1.15rem; font-weight: 700; padding: 14px 20px; border: 0; border-radius: 10px; background: var(--gold); color: var(--bg); cursor: pointer; }
+#start:focus-visible { outline: 3px solid var(--fg); outline-offset: 3px; }
+#start[hidden], #ios[hidden] { display: none; }
+#ios { margin: 0; color: var(--muted); font-size: 0.875rem; line-height: 1.5; }
 @media (prefers-reduced-motion: reduce) { .fill { transition: none; } }
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -49,6 +60,8 @@ ul { margin: 0; padding-left: 1.2em; display: grid; gap: 6px; line-height: 1.55;
     </ul>
     <div class="bar" role="progressbar" aria-label="불러오는 중" aria-valuemin="0" aria-valuemax="100"><div class="fill" id="fill"></div></div>
     <p id="status">불러오는 중</p>
+    <button id="start" type="button" hidden>전체 화면으로 시작</button>
+    <p id="ios" hidden>아이폰은 주소창을 숨길 수 없어요. 사파리 공유 버튼 → 「홈 화면에 추가」를 누른 뒤, 홈 화면 아이콘으로 열면 주소창 없이 할 수 있어요.</p>
   </div>
 </div>
 
@@ -70,7 +83,19 @@ ul { margin: 0; padding-left: 1.2em; display: grid; gap: 6px; line-height: 1.55;
     fill.style.transform = "scaleX(" + p + ")";
     bar.setAttribute("aria-valuenow", Math.round(p * 100));
   }).then(() => {
-    document.getElementById("note").hidden = true;
+    // 주소창이 화면 위쪽 글자를 가려서, 시작할 때 전체 화면으로 바꾼다 (아이폰은 지원 안 함 → 홈 화면 추가 안내)
+    const start = document.getElementById("start");
+    const canFull = !!document.documentElement.requestFullscreen;
+    const standalone = matchMedia("(display-mode: fullscreen), (display-mode: standalone)").matches || navigator.standalone;
+    if (standalone) { document.getElementById("note").hidden = true; return; }
+    status.hidden = true; bar.hidden = true;
+    start.hidden = false;
+    if (!canFull) { start.textContent = "시작"; document.getElementById("ios").hidden = false; }
+    start.addEventListener("click", async () => {
+      try { if (canFull) await document.documentElement.requestFullscreen({ navigationUI: "hide" }); } catch (e) {}
+      try { await screen.orientation.lock("landscape"); } catch (e) {}
+      document.getElementById("note").hidden = true;
+    });
   }).catch((e) => {
     status.textContent = "불러오지 못했어요. 새로고침해 주세요. (" + e + ")";
   });
