@@ -1,0 +1,77 @@
+<title>거인의 숨결 퍼즐 시험판</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* hallmark v2.0.0 · fast mode · genre: playful (kids) · theme: custom, the game's own stone-and-gold palette · signature: the puzzle itself, full screen */
+/* critique: a loader in front of a full-screen game; the only words are the tester's four instructions, then the game takes the whole screen */
+:root {
+  /* layout: one full-screen canvas; a centred note sits over it only while the game loads */
+  --bg: #121214;
+  --fg: #dcd8cf;
+  --muted: #8f8a80;
+  --gold: #f09e26;
+  --track: #2a2a2e;
+  --font-body: "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+  color-scheme: dark;
+}
+html, body { height: 100%; overflow-x: clip; }
+body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 16px; }
+#stage { position: fixed; inset: 0; }
+#unity-canvas { width: 100%; height: 100%; display: block; background: var(--bg); touch-action: none; }
+#note {
+  position: fixed; inset: 0; display: grid; place-items: center;
+  padding-block: 24px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  background: var(--bg);
+}
+#note[hidden] { display: none !important; }
+.card { display: grid; gap: 16px; max-width: 34rem; min-width: 0; }
+h1 { margin: 0; font-size: 1.5rem; font-weight: 700; color: var(--gold); text-wrap: balance; overflow-wrap: break-word; }
+ul { margin: 0; padding-left: 1.2em; display: grid; gap: 6px; line-height: 1.55; }
+.bar { height: 8px; border-radius: 4px; background: var(--track); overflow: hidden; }
+.fill { height: 100%; width: 100%; background: var(--gold); transform-origin: left; transform: scaleX(0); }
+#status { margin: 0; color: var(--muted); font-size: 0.875rem; }
+@media (prefers-reduced-motion: reduce) { .fill { transition: none; } }
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap">
+
+<div id="stage"><canvas id="unity-canvas" tabindex="-1"></canvas></div>
+
+<div id="note">
+  <div class="card">
+    <h1>거인의 숨결 퍼즐 시험판</h1>
+    <ul>
+      <li>휴대폰을 가로로 돌려 주세요.</li>
+      <li>조각을 끌어서 옮기고, 톡 치면 45도씩 돌아가요.</li>
+      <li>아래 버튼에서 단계를 고를 수 있어요. 1단계는 5~6세, 2단계는 7~9세, 3단계는 10~12세용이에요.</li>
+      <li>다 맞추면 걸린 시간과 어디서 막혔는지 알려 주세요.</li>
+    </ul>
+    <div class="bar" role="progressbar" aria-label="불러오는 중" aria-valuemin="0" aria-valuemax="100"><div class="fill" id="fill"></div></div>
+    <p id="status">불러오는 중</p>
+  </div>
+</div>
+
+<script src="Build/WebGL.loader.js"></script>
+<script>
+  const fill = document.getElementById("fill");
+  const bar = fill.parentElement;
+  const status = document.getElementById("status");
+  createUnityInstance(document.getElementById("unity-canvas"), {
+    dataUrl: "Build/m5-data.wasm",
+    frameworkUrl: "Build/m5-framework.wasm",
+    codeUrl: "Build/m5-code.wasm",
+    companyName: "NexusFrame",
+    productName: "M5 Puzzle Test",
+    productVersion: "0.1",
+    matchWebGLToCanvasSize: true,
+    devicePixelRatio: Math.min(window.devicePixelRatio || 1, 2)
+  }, (p) => {
+    fill.style.transform = "scaleX(" + p + ")";
+    bar.setAttribute("aria-valuenow", Math.round(p * 100));
+  }).then(() => {
+    document.getElementById("note").hidden = true;
+  }).catch((e) => {
+    status.textContent = "불러오지 못했어요. 새로고침해 주세요. (" + e + ")";
+  });
+</script>
